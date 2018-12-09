@@ -28,6 +28,6 @@ data Cmd = Assign String Expr
          | Print Expr
          | Seq Expr Char
          | Read String --altera a memoria
-         | If Expr Cmd Cmd
+         | If Expr --Cmd Cmd
          | While Expr Cmd Cmd  
          deriving (Show)

@@ -47,7 +47,7 @@ add = chainl1 mul (binop "+" (Bin Add) <|> binop "-" (Bin Sub))
 
 -- A parser for expressions
 expr :: Parser Expr
-expr = add <|> mul <|> bin
+expr = add <|> mul -- <|> binop
 
 
 -- A parser for assignment command
@@ -67,12 +67,20 @@ printcmd :: Parser Cmd
 printcmd = Print <$> (token (string "print") *> expr)
 
 ifcmd :: Parser Cmd
-ifcmd = If <$> token (string "if(") *> expr <* token (char ')') 
+ifcmd = If <$> (token (string "if") *> expr)   
+{-
 
 whilecmd :: Parser Cmd
 whilecmd = While <$> token (string "while(") *> expr <* token (char ')') 
 
+readcmd :: Parser Cmd
+readcmd = Read <$> token identifier <*
+                   token (string "read ") <*>
+                   expr 
+
+                   -}
 -- A parser for command
 cmd :: Parser Cmd
-cmd = assign <|> printcmd <|> ifcmd <|> whilecmd
+cmd = assign <|> printcmd  <|> ifcmd  -- <|> whilecmd <|> readcmd
+
 
