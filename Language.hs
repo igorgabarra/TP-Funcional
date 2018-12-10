@@ -1,11 +1,5 @@
 module Language where
 
--- The type of expressions
--- TODO: power (right associative)
--- TODO: relational operators (=, !=, >, >=, <, <=)
--- TODO: logical operators (&&, ||)
--- TODO: unnary operator for changing the sign (-)
--- TODO: unnary operator for logical negation (!)
 data Expr = Cte Double
           | Var String
           | Bin Op Expr Expr
@@ -20,13 +14,19 @@ data Op = Add
         | Negation
         | And
         | Or
+        | GThen
+        | GEqual
+        | Equal
+        | Different
+        | LThen
+        | LEqual
   deriving (Show)
 
 -- The type of commands
 data Cmd = Assign String Expr                       --pronto
          | Print Expr                               --pronto
-         | Seq [Expr]
-         | Read String Double --altera a memoria    --pronto
+         | Seq [Cmd]
+         | Read String Double --read from I/O       --pronto
          | If Expr Cmd Cmd                          --pronto
-         | While Expr [Cmd]
+         | While Expr Cmd --while <expr> do <cmd> 
          deriving (Show)

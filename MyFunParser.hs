@@ -1,6 +1,8 @@
 module MyFunParser where
 
 import Control.Applicative (some, (<|>))
+import Text.ParserCombinators.Parsec (many1)
+import Text.ParserCombinators.ReadP(many)
 import Parser
 import Language
 
@@ -64,9 +66,24 @@ and1 :: Parser Expr
 and1 = chainl1 negation (binop "&&" (Bin And) <|> binop "||" (Bin Or))
 
 
+-- A parser for binary operators: > and >=
+greater :: Parser Expr
+greater = chainl1 add (binop ">" (Bin GThen) <|> binop ">=" (Bin GEqual))
+
+
+-- A parser for binary operators: < and <=
+less :: Parser Expr
+less = chainl1 add (binop "<" (Bin LThen) <|> binop "<=" (Bin LEqual))
+
+
+-- A parser for binary operators: = and !=
+equality :: Parser Expr
+equality = chainl1 add (binop "=" (Bin Equal) <|> binop "!=" (Bin Different))
+
+
 -- A parser for expressions
 expr :: Parser Expr
-expr = add <|> pow <|> mul <|> add <|> negation <|> and1  
+expr = greater <|> less <|> equality <|> add <|> pow <|> mul <|> add <|> negation <|> and1  
 
 
 -- A parser for assignment command
@@ -97,16 +114,25 @@ ifcmd = do token (string "if")
            c2 <- cmd
            return (If e c1 c2)
 
--- A parser for while command
+{-
 whilecmd :: Parser Cmd
 whilecmd = do token (string "while")
               e <- expr
               return (While e lista)
            where
              lista = (:) <$> cmd <* token (string ";") 
-              
+-- (:) <$> letter <*> many (letter <|> digit <|> underscore)              
+-}
 
--- (:) <$> letter <*> many (letter <|> digit <|> underscore)
+-- A parser for while command
+whilecmd :: Parser Cmd
+whilecmd = do token (string "while(")
+              e <- expr
+              token (string ") do ")
+              c1 <- cmd
+              return (While e c1)
+
+
 -- A parser for read command
 readcmd :: Parser Cmd
 readcmd = do id <- token identifier
@@ -114,16 +140,13 @@ readcmd = do id <- token identifier
              e <- token double 
              return (Read id e)
 
-{-
 seqcmd :: Parser Cmd
-seqcmd = do command <- expr
-            token (string "; ")
-            return ( (:) <$> (Seq command) <*> seqcmd)
+seqcmd = Seq <$> chainl1 ((:[]) <$> cmd) (char ';' *> pure (++))
 
--}
+
 -- A parser for command
 cmd :: Parser Cmd
-cmd = assign <|> printcmd  <|> ifcmd  <|> readcmd <|> whilecmd -- <|> seqcmd <|> whilecmd 
+cmd = assign <|> printcmd  <|> ifcmd  <|> readcmd <|> seqcmd -- <|> whilecmd <|> seqcmd <|> whilecmd 
 
 
 {-
@@ -139,4 +162,35 @@ readcmd = Read <$> token identifier <*
 ifcmd :: Parser Cmd
 ifcmd = If <$> (token (string "if") *> expr)  
 
+-}
+
+{-
+ 
+seqcmd :: Parser [Cmd]
+seqcmd = seqcmd1 cmd <|> return []
+   where 
+      seqcmd1 p = do x <- p
+                     xs <- many ((char ';') >> p)
+                     return (x:xs)
+
+
+--seqcmd = (Seq) `sepBy`(char ';') 
+seqcmd :: Parser Cmd
+seqcmd = do command <- cmd
+            token (string "; ")
+            return ( (:) <$> (Seq command) <*> seqcmd)
+
+
+seqcmd :: Parser Cmd
+seqcmd = do command <- cmd
+            token (char ';')
+            return (Seq command)
+
+
+listseqcmd:: Parser Cmd
+listseqcmd = many1 (seqcmd)
+      where
+         seqcmd = do command <- cmd
+                     token (char ';')
+                     return (Seq command)
 -}

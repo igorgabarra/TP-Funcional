@@ -25,9 +25,15 @@ eval m (Bin op x y) =
     Div      -> vx / vy
     Pow      -> vx ** vy
     Negative -> (-1)* vx
-    Negation -> if ( vx == 0 || vy == 0 ) then 1 else 0
+    GThen    -> if    vx > vy then 1 else 0
+    LThen    -> if    vx < vy then 1 else 0
+    GEqual   -> if   vx >= vy then 1 else 0
+    LEqual   -> if   vx <= vy then 1 else 0
+    Equal    -> if   vx == vy then 1 else 0
+    Different-> if   vx /= vy then 1 else 0
     And      -> if lvx && lvy then 1 else 0
     Or       -> if lvx || lvy then 1 else 0
+    Negation -> if ( vx == 0 || vy == 0 ) then 1 else 0
   where
     vx = eval m x
     vy = eval m y
@@ -39,11 +45,20 @@ execute :: Memory -> Cmd -> IO Memory
 execute m (Assign v e)    = return ((v, eval m e) : m)
 execute m (Print e)       = do print (eval m e)
                                return m
---execute m (Seq x:[])      = return (execute m x)
---execute m (Seq (x:xs))    = return (execute m x : execute m xs)
-execute m (Read str x)      = return ((str, x) : m)
+execute m (Seq lista) = sequencia m lista
+                            where
+                               sequencia m [] = return m
+                               sequencia m (x:xs) = do newMemory <- execute m x 
+                                                       sequencia newMemory xs
+execute m (Read str x)    = return ((str, x) : m)
 execute m (If e c1 c2)    = case eval m e of
                                  1         -> execute m c1
                                  otherwise -> execute m c2
 
---execute m (While e c1 c2) = return 
+execute m (While e c1) = repeticao m e c1
+                           where
+                             repeticao m e c1 = case eval m e of
+                                                    1 -> do newMemory <- execute m c1
+                                                            repeticao newMemory e c1
+                                                    otherwise -> return m
+
