@@ -8,7 +8,7 @@ type Memory = [(String, Double)]
 
 -- initial memory
 initialMemory :: Memory
-initialMemory = []
+initialMemory = [("x", 15)]
 
 -- Expression evaluation
 eval :: Memory -> Expr -> Double
@@ -17,7 +17,6 @@ eval m (Var v) =
   case lookup v m of
     Just x -> x
     Nothing -> 0
-
 eval m (Bin op x y) =
   case op of
     Add      -> vx + vy
@@ -26,27 +25,25 @@ eval m (Bin op x y) =
     Div      -> vx / vy
     Pow      -> vx ** vy
     Negative -> (-1)* vx
-    Negation -> if ( vx == 0 || vy == 0 )
-      then 1
-      else 0
-    And     -> if lvx && lvy
-      then 1
-      else 0
-    Or     -> if lvx || lvy
-      then 1
-      else 0
+    Negation -> if ( vx == 0 || vy == 0 ) then 1 else 0
+    And      -> if lvx && lvy then 1 else 0
+    Or       -> if lvx || lvy then 1 else 0
   where
     vx = eval m x
     vy = eval m y
-    lvx = if vx == 0
-      then False
-      else True
-    lvy = if vy == 0
-      then False
-      else True
+    lvx = if vx == 1 then True else False
+    lvy = if vy == 1 then True else False
 
 -- Command execution
 execute :: Memory -> Cmd -> IO Memory
-execute m (Assign v e) = return ((v, eval m e) : m)
-execute m (Print e) = do print (eval m e)
-                         return m
+execute m (Assign v e)    = return ((v, eval m e) : m)
+execute m (Print e)       = do print (eval m e)
+                               return m
+--execute m (Seq x:[])      = return (execute m x)
+--execute m (Seq (x:xs))    = return (execute m x : execute m xs)
+execute m (Read str x)      = return ((str, x) : m)
+execute m (If e c1 c2)    = case eval m e of
+                                 1         -> execute m c1
+                                 otherwise -> execute m c2
+
+--execute m (While e c1 c2) = return 
