@@ -8,15 +8,18 @@ module Language where
 -- TODO: unnary operator for logical negation (!)
 data Expr = Cte Double
           | Var String
-          | Pow Expr Expr
-          | Negative Expr
-          | Negation Expr
-          | And Expr Expr 
-          | Or Expr Expr
           | Bin Op Expr Expr
      deriving (Show)
 
-data Op = Add | Sub | Mul | Div
+data Op = Add
+        | Sub
+        | Mul
+        | Div
+        | Pow
+        | Negative
+        | Negation
+        | And
+        | Or
   deriving (Show)
 
 -- The type of commands
@@ -28,6 +31,6 @@ data Cmd = Assign String Expr
          | Print Expr
          | Seq Expr Char
          | Read String --altera a memoria
-         | If Expr --Cmd Cmd
-         | While Expr Cmd Cmd  
+         | If Expr Cmd Cmd
+         | While Expr Cmd Cmd
          deriving (Show)

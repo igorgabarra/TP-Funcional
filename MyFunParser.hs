@@ -33,21 +33,40 @@ atomic = cte <|>
          var <|>
          token (char '(') *> expr <* token (char ')')
 
+
 -- A parser for a binary operator
 binop :: String -> (a -> a -> a) -> Parser (a -> a -> a)
 binop name function = token (string name) *> pure function
 
+
+-- A parser for pow
+pow :: Parser Expr
+pow = chainl1 atomic (binop "^" (Bin Pow))
+
+
 -- A parser for multiplication and division
 mul :: Parser Expr
-mul = chainl1 atomic (binop "*" (Bin Mul) <|> binop "/" (Bin Div))
+mul = chainl1 pow (binop "*" (Bin Mul) <|> binop "/" (Bin Div))
+
 
 -- A parser for addition and subtraction
 add :: Parser Expr
 add = chainl1 mul (binop "+" (Bin Add) <|> binop "-" (Bin Sub))
 
+
+-- A parser for negation of expression
+negation :: Parser Expr
+negation = chainl1 atomic (binop "!" (Bin Negation))
+
+
+-- A parser for binary operators: && and ||
+and :: Parser Expr
+and = chainl1 negation (binop "&&" (Bin And) <|> binop "||" (Bin Or))
+
+
 -- A parser for expressions
 expr :: Parser Expr
-expr = add <|> mul -- <|> binop
+expr = pow <|> mult <|> add <|> negation <|> and  
 
 
 -- A parser for assignment command
