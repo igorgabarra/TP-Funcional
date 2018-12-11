@@ -11,15 +11,15 @@ data Op = Add
         | Div
         | Pow
         | Negative
-        | Negation
-        | And
-        | Or
         | GThen
+        | LThen
+        | LEqual
         | GEqual
         | Equal
         | Different
-        | LThen
-        | LEqual
+        | And
+        | Or
+        | Negation
   deriving (Show)
 
 -- The type of commands

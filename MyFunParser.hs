@@ -55,34 +55,13 @@ add :: Parser Expr
 add = chainl1 mul (binop "+" (Bin Add) <|> binop "-" (Bin Sub))
 
 
--- A parser for negation of expression
-negation :: Parser Expr
-negation = chainl1 atomic (binop "!" (Bin Negation))
-
-
--- A parser for binary operators: && and ||
-and1 :: Parser Expr
-and1 = chainl1 negation (binop "&&" (Bin And) <|> binop "||" (Bin Or))
-
-
--- A parser for binary operators: > and >=
-greater :: Parser Expr
-greater = chainl1 add (binop ">" (Bin GThen) <|> binop ">=" (Bin GEqual))
-
-
--- A parser for binary operators: < and <=
-less :: Parser Expr
-less = chainl1 add (binop "<" (Bin LThen) <|> binop "<=" (Bin LEqual))
-
-
--- A parser for binary operators: = and !=
-equality :: Parser Expr
-equality = chainl1 add (binop "=" (Bin Equal) <|> binop "!=" (Bin Different))
+operator :: Parser Expr
+operator = chainl1 add (binop ">=" (Bin GEqual) <|> binop "<=" (Bin LEqual) <|> binop ">" (Bin GThen) <|> binop "<" (Bin LThen) <|> binop "=" (Bin Equal) <|> binop "!=" (Bin Different) <|> binop "&&" (Bin And) <|> binop "||" (Bin Or) <|> binop "!" (Bin Negation))
 
 
 -- A parser for expressions
 expr :: Parser Expr
-expr = greater <|> less <|> equality <|> add <|> pow <|> mul <|> add <|> negation <|> and1  
+expr = operator <|> add <|> pow <|> mul <|> add
 
 
 -- A parser for assignment command
@@ -120,22 +99,6 @@ whilecmd = do token (string "while")
               token (char ')')
               command <- cmd
               return (While e command)
-
-{-
-           where
-             lista = chainl1 ((:[]) <$> cmd) (pure (++))
-             (:) <$> cmd <* token (string ";") 
--- (:) <$> letter <*> many (letter <|> digit <|> underscore)              
-
--- A parser for while command
-whilecmd :: Parser Cmd
-whilecmd = do token (string "while(")
-              e <- expr
-              token (string ") do ")
-              c1 <- cmd
-              return (While e c1)
--}
-
 
 -- A parser for read command
 readcmd :: Parser Cmd

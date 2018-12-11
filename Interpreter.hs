@@ -57,7 +57,7 @@ execute m (If e c1 c2)    = case eval m e of
 execute m (While e c1) = repeticao m e c1
                            where
                              repeticao m e c1 = case eval m e of
-                                                    1 -> do newMemory <- execute m c1
-                                                            repeticao newMemory e c1
-                                                    otherwise -> return m
+                                                    0         -> return m
+                                                    otherwise -> do newMemory <- execute m c1
+                                                                    repeticao newMemory e c1
 
