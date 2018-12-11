@@ -113,15 +113,19 @@ ifcmd = do token (string "if")
            c2 <- cmd
            return (If e c1 c2)
 
-{-
 whilecmd :: Parser Cmd
 whilecmd = do token (string "while")
+              token (char '(')
               e <- expr
-              return (While e lista)
+              token (char ')')
+              command <- cmd
+              return (While e command)
+
+{-
            where
-             lista = (:) <$> cmd <* token (string ";") 
+             lista = chainl1 ((:[]) <$> cmd) (pure (++))
+             (:) <$> cmd <* token (string ";") 
 -- (:) <$> letter <*> many (letter <|> digit <|> underscore)              
--}
 
 -- A parser for while command
 whilecmd :: Parser Cmd
@@ -130,6 +134,7 @@ whilecmd = do token (string "while(")
               token (string ") do ")
               c1 <- cmd
               return (While e c1)
+-}
 
 
 -- A parser for read command
@@ -141,20 +146,13 @@ readcmd = do token (string "read")
              return (Read id e)
 
 seqcmd :: Parser Cmd
-seqcmd = token (char '{') *> montagem <* token (char '}')
+seqcmd = token (char '{') *> montagem <* token (char ';') <* token (char '}')
     where
       montagem = Seq <$> chainl1 ((:[]) <$> cmd) (token (char ';') *> pure (++))
 
-{-
-sepBy :: Parser a -> Parser b -> Parser [a]
-sepBy p sep = sepBy1 p sep <|> pure []
-    where
-       sepBy1 p sep = (:) <$> p <*> many (sep *> p)
-
--}
 -- A parser for command
 cmd :: Parser Cmd
-cmd = assign <|> printcmd  <|> ifcmd  <|> readcmd <|> seqcmd -- <|> whilecmd <|> seqcmd <|> whilecmd 
+cmd = assign <|> printcmd  <|> ifcmd  <|> readcmd <|> seqcmd <|> whilecmd
 
 
 {-
@@ -172,6 +170,13 @@ ifcmd = If <$> (token (string "if") *> expr)
 
 -}
 
+{-
+sepBy :: Parser a -> Parser b -> Parser [a]
+sepBy p sep = sepBy1 p sep <|> pure []
+    where
+       sepBy1 p sep = (:) <$> p <*> many (sep *> p)
+
+-}
 {-
  
 seqcmd :: Parser [Cmd]
