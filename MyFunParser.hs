@@ -1,7 +1,6 @@
 module MyFunParser where
 
 import Control.Applicative (some, (<|>))
-import Text.ParserCombinators.Parsec (many1)
 import Text.ParserCombinators.ReadP(many)
 import Parser
 import Language
@@ -135,15 +134,24 @@ whilecmd = do token (string "while(")
 
 -- A parser for read command
 readcmd :: Parser Cmd
-readcmd = do id <- token identifier
-             token (string "<-")
+readcmd = do token (string "read")
+             id <- token identifier
+             aux <- spaces
              e <- token double 
              return (Read id e)
 
 seqcmd :: Parser Cmd
-seqcmd = Seq <$> chainl1 ((:[]) <$> cmd) (char ';' *> pure (++))
+seqcmd = token (char '{') *> montagem <* token (char '}')
+    where
+      montagem = Seq <$> chainl1 ((:[]) <$> cmd) (token (char ';') *> pure (++))
 
+{-
+sepBy :: Parser a -> Parser b -> Parser [a]
+sepBy p sep = sepBy1 p sep <|> pure []
+    where
+       sepBy1 p sep = (:) <$> p <*> many (sep *> p)
 
+-}
 -- A parser for command
 cmd :: Parser Cmd
 cmd = assign <|> printcmd  <|> ifcmd  <|> readcmd <|> seqcmd -- <|> whilecmd <|> seqcmd <|> whilecmd 

@@ -7,7 +7,8 @@ import Interpreter (execute, initialMemory)
 main :: IO ()
 main =
   do -- read the input program
-     input <- getContents
+     --input <- getContents
+     input <- getLine
      -- do syntax analysis of the program
      case parse cmd input of
        -- it succeed: execute the program

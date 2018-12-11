@@ -1,7 +1,6 @@
 module Interpreter where
 
 import Language
-
 -- A type to represent the memory, that is, that association of
 -- variable names with values
 type Memory = [(String, Double)]
