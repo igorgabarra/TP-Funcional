@@ -41,22 +41,27 @@ eval m (Bin op x y) =
 
 -- Command execution
 execute :: Memory -> Cmd -> IO Memory
+-- Execute for Assign structure
 execute m (Assign v e)    = return ((v, eval m e) : m)
+-- Execute for Print structure
 execute m (Print e)       = do print (eval m e)
                                return m
-execute m (Seq lista) = sequencia m lista
-                            where
+-- Execute for Seq structure, recursive
+execute m (Seq lista)     = sequencia m lista
+                              where
                                sequencia m [] = return m
                                sequencia m (x:xs) = do newMemory <- execute m x 
                                                        sequencia newMemory xs
+-- Execute for Read structure
 execute m (Read str x)    = return ((str, x) : m)
+-- Execute for If structure, recursive
 execute m (If e c1 c2)    = case eval m e of
-                                 1         -> execute m c1
-                                 otherwise -> execute m c2
-
-execute m (While e c1) = repeticao m e c1
-                           where
-                             repeticao m e c1 = case eval m e of
+                                 0         -> execute m c2
+                                 otherwise -> execute m c1
+-- Execute for While structure, recursive
+execute m (While e c1)    = repeticao m e c1
+                              where
+                               repeticao m e c1 = case eval m e of
                                                     0         -> return m
                                                     otherwise -> do newMemory <- execute m c1
                                                                     repeticao newMemory e c1

@@ -54,21 +54,31 @@ mul = chainl1 pow (binop "*" (Bin Mul) <|> binop "/" (Bin Div))
 add :: Parser Expr
 add = chainl1 mul (binop "+" (Bin Add) <|> binop "-" (Bin Sub))
 
+negative :: Parser Expr
+negative = do token (char '-')
+              ex <- expr
+              return (Bin Negative ex ex)
 
+negation :: Parser Expr
+negation = do token (char '!')
+              ex <- expr
+              return (Bin Negation ex ex)
+
+
+-- A parser for all logic-relational operators
 operator :: Parser Expr
 operator = chainl1 add (binop ">=" (Bin GEqual) <|> binop "<=" (Bin LEqual) <|> binop ">" (Bin GThen) <|> binop "<" (Bin LThen) <|> binop "=" (Bin Equal) <|> binop "!=" (Bin Different) <|> binop "&&" (Bin And) <|> binop "||" (Bin Or) <|> binop "!" (Bin Negation))
 
-
 -- A parser for expressions
 expr :: Parser Expr
-expr = operator <|> add <|> pow <|> mul <|> add
-
+expr = negative <|> negation <|> operator <|> add <|> pow <|> mul
 
 -- A parser for assignment command
 assign2 :: Parser Cmd
 assign2 = Assign <$> token identifier <*
                      token (string ":=") <*>
                      expr
+
 -- ... or alternatively
 assign :: Parser Cmd
 assign = do id <- token identifier
@@ -80,8 +90,7 @@ assign = do id <- token identifier
 printcmd :: Parser Cmd
 printcmd = Print <$> (token (string "print") *> expr)
  
-
--- A parser for if-else command
+-- A parser for if(<expr>) then <c1> else <c2> command
 ifcmd :: Parser Cmd
 ifcmd = do token (string "if")
            token (char '(')
@@ -92,6 +101,7 @@ ifcmd = do token (string "if")
            c2 <- cmd
            return (If e c1 c2)
 
+-- A parser for while(<expr>) <c1> command
 whilecmd :: Parser Cmd
 whilecmd = do token (string "while")
               token (char '(')
@@ -100,73 +110,21 @@ whilecmd = do token (string "while")
               command <- cmd
               return (While e command)
 
--- A parser for read command
+-- A parser for read command: read <var> -> gets value of <var> with getLine
 readcmd :: Parser Cmd
 readcmd = do token (string "read")
-             id <- token identifier
-             aux <- spaces
+             id <- token identifier 
+             aux <- token spaces
              e <- token double 
              return (Read id e)
 
+-- A parser for a sequence of commands separated by ';': {<c1>; <c2>; <cn>;}
 seqcmd :: Parser Cmd
 seqcmd = token (char '{') *> montagem <* token (char ';') <* token (char '}')
     where
       montagem = Seq <$> chainl1 ((:[]) <$> cmd) (token (char ';') *> pure (++))
 
+
 -- A parser for command
 cmd :: Parser Cmd
-cmd = assign <|> printcmd  <|> ifcmd  <|> readcmd <|> seqcmd <|> whilecmd
-
-
-{-
-
-whilecmd :: Parser Cmd
-whilecmd = While <$> token (string "while(") *> expr <* token (char ')') 
-
-readcmd :: Parser Cmd
-readcmd = Read <$> token identifier <*
-                   token (string "read ") <*>
-                   expr 
-
-ifcmd :: Parser Cmd
-ifcmd = If <$> (token (string "if") *> expr)  
-
--}
-
-{-
-sepBy :: Parser a -> Parser b -> Parser [a]
-sepBy p sep = sepBy1 p sep <|> pure []
-    where
-       sepBy1 p sep = (:) <$> p <*> many (sep *> p)
-
--}
-{-
- 
-seqcmd :: Parser [Cmd]
-seqcmd = seqcmd1 cmd <|> return []
-   where 
-      seqcmd1 p = do x <- p
-                     xs <- many ((char ';') >> p)
-                     return (x:xs)
-
-
---seqcmd = (Seq) `sepBy`(char ';') 
-seqcmd :: Parser Cmd
-seqcmd = do command <- cmd
-            token (string "; ")
-            return ( (:) <$> (Seq command) <*> seqcmd)
-
-
-seqcmd :: Parser Cmd
-seqcmd = do command <- cmd
-            token (char ';')
-            return (Seq command)
-
-
-listseqcmd:: Parser Cmd
-listseqcmd = many1 (seqcmd)
-      where
-         seqcmd = do command <- cmd
-                     token (char ';')
-                     return (Seq command)
--}
+cmd = assign <|> readcmd <|> printcmd  <|> ifcmd <|> seqcmd <|> whilecmd
