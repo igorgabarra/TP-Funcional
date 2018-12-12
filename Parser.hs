@@ -141,3 +141,5 @@ token p = p <* spaces
 string :: String -> Parser String
 string "" = pure ""
 string (x:xs) = (:) <$> char x <*> string xs
+
+--End of Parser.hs

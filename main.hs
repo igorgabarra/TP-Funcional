@@ -18,3 +18,5 @@ main =
             print mem
        -- it failed: show an error message
        _ -> putStrLn "syntax error"
+
+--End of main.hs

@@ -30,3 +30,5 @@ data Cmd = Assign String Expr                       --pronto
          | If Expr Cmd Cmd                          --pronto
          | While Expr Cmd --while <expr> do <cmd> 
          deriving (Show)
+
+-- End of Language.hs

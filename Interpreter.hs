@@ -66,3 +66,4 @@ execute m (While e c1)    = repeticao m e c1
                                                     otherwise -> do newMemory <- execute m c1
                                                                     repeticao newMemory e c1
 
+--End of Interpreter.hs
